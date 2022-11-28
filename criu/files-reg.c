@@ -805,14 +805,16 @@ int try_clean_remaps(bool only_ghosts)
 	struct remap_info *ri;
 	int ret = 0;
 
-	list_for_each_entry(ri, &remaps, list) {
-		if (ri->rpe->remap_type == REMAP_TYPE__GHOST)
-			ret |= clean_one_remap(ri);
-		else if (only_ghosts)
-			continue;
-		else if (ri->rpe->remap_type == REMAP_TYPE__LINKED)
-			ret |= clean_one_remap(ri);
-	}
+    if (!opts.non_destructive) {
+        list_for_each_entry(ri, &remaps, list) {
+            if (ri->rpe->remap_type == REMAP_TYPE__GHOST)
+                ret |= clean_one_remap(ri);
+            else if (only_ghosts)
+                continue;
+            else if (ri->rpe->remap_type == REMAP_TYPE__LINKED)
+                ret |= clean_one_remap(ri);
+        }
+    }
 
 	return ret;
 }
@@ -1040,6 +1042,7 @@ static int create_link_remap(char *path, int len, int lfd, u32 *idp, struct ns_i
 	int mntns_root;
 	int ret;
 	const struct stat *ost = &parms->stat;
+    long unique;
 
 	if (!opts.link_remap_ok) {
 		pr_err("Can't create link remap for %s. "
@@ -1073,13 +1076,23 @@ static int create_link_remap(char *path, int len, int lfd, u32 *idp, struct ns_i
 	rfe.name = link_name + 1;
 
 	/* Any 'unique' name works here actually. Remap works by reg-file ids. */
+    unique = 0;
 	snprintf(tmp + 1, sizeof(link_name) - (size_t)(tmp - link_name - 1), "link_remap.%d", rfe.id);
 
 	mntns_root = mntns_get_root_fd(nsid);
 
 again:
 	ret = linkat_hard(lfd, "", mntns_root, link_name, ost->st_uid, ost->st_gid, AT_EMPTY_PATH);
-	if (ret < 0 && errno == ENOENT) {
+	if (ret < 0 && errno == EEXIST) {
+        unique++;
+        if (unique > INT_MAX) {
+            pr_err("Couldn't find unique remap name for %s", path);
+            return -1;
+        }
+        snprintf(tmp + 1, sizeof(link_name) - (size_t)(tmp - link_name -1),
+            "link_remap.%d.%ld", rfe.id, unique);
+        goto again;
+	} else if (ret < 0 && errno == ENOENT) {
 		/* Use grand parent, if parent directory does not exist. */
 		if (trim_last_parent(link_name) < 0) {
 			pr_err("trim failed: @%s@\n", link_name);

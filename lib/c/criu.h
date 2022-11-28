@@ -78,6 +78,8 @@ void criu_set_tcp_close(bool tcp_close);
 void criu_set_weak_sysctls(bool val);
 void criu_set_evasive_devices(bool evasive_devices);
 void criu_set_shell_job(bool shell_job);
+void criu_set_enter_mntns(bool enter_mntns);
+void criu_set_enter_pidns(bool enter_pidns);
 void criu_set_skip_file_rwx_check(bool skip_file_rwx_check);
 void criu_set_unprivileged(bool unprivileged);
 void criu_set_orphan_pts_master(bool orphan_pts_master);

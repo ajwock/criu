@@ -232,6 +232,10 @@ struct cr_options {
 	 * explicitly request it as it comes with many limitations.
 	 */
 	int unprivileged;
+
+    int non_destructive;
+    int enter_mntns;
+    int enter_pidns;
 };
 
 extern struct cr_options opts;

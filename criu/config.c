@@ -701,6 +701,9 @@ int parse_options(int argc, char **argv, bool *usage_error, bool *has_exec_cmd, 
 		{ "network-lock", required_argument, 0, 1100 },
 		BOOL_OPT("mntns-compat-mode", &opts.mntns_compat_mode),
 		BOOL_OPT("unprivileged", &opts.unprivileged),
+        BOOL_OPT("non-destructive", &opts.non_destructive),
+        BOOL_OPT("enter-mntns", &opts.enter_mntns),
+        BOOL_OPT("enter-pidns", &opts.enter_pidns),
 		{},
 	};
 

@@ -79,6 +79,8 @@ extern pid_t sys_clone_unified(unsigned long flags, void *child_stack, void *par
 
 extern int do_open_proc(pid_t pid, int flags, const char *fmt, ...) __attribute__((__format__(__printf__, 3, 4)));
 
+extern int open_proc_sfd(char *path);
+
 #define __open_proc(pid, ier, flags, fmt, ...)                                            \
 	({                                                                                \
 		int __fd = do_open_proc(pid, flags, fmt, ##__VA_ARGS__);                  \

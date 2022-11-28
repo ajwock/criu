@@ -555,6 +555,24 @@ void criu_set_shell_job(bool shell_job)
 	criu_local_set_shell_job(global_opts, shell_job);
 }
 
+void criu_local_set_enter_mntns(criu_opts *opts, bool enter_mntns) {
+    opts->rpc->has_enter_mntns = true;
+    opts->rpc->enter_mntns = enter_mntns;
+}
+
+void criu_set_enter_mntns(bool enter_mntns) {
+    criu_local_set_enter_mntns(global_opts, enter_mntns);
+}
+
+void criu_local_set_enter_pidns(criu_opts *opts, bool enter_pidns) {
+    opts->rpc->has_enter_pidns = true;
+    opts->rpc->enter_pidns = enter_pidns;
+}
+
+void criu_set_enter_pidns(bool enter_pidns) {
+    criu_local_set_enter_pidns(global_opts, enter_pidns);
+}
+
 void criu_local_set_skip_file_rwx_check(criu_opts *opts, bool skip_file_rwx_check)
 {
 	opts->rpc->has_skip_file_rwx_check = true;
