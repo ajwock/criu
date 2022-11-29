@@ -241,4 +241,7 @@ extern void unsc_msg_init(struct unsc_msg *m, uns_call_t *c, int *x, void *arg, 
 extern void unsc_msg_pid_fd(struct unsc_msg *um, pid_t *pid, int *fd);
 extern int start_unix_cred_daemon(pid_t *pid, int (*daemon_func)(int sk));
 
+extern pid_t enter_pidns(pid_t *target_pid);
+extern int cr_enter_ns(pid_t *target_pid);
+
 #endif /* __CR_NS_H__ */

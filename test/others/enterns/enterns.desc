@@ -1,0 +1,1 @@
+{'flavor': 'h ns uns', 'opts': '--enter_mntns --enter_pidns', 'flags': 'nouser samens'}

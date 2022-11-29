@@ -1920,3 +1920,82 @@ static int collect_pid_namespaces(bool for_dump)
 
 	return walk_namespaces(&pid_ns_desc, collect_pid_ns, NULL);
 }
+
+pid_t enter_pidns(pid_t *target_pid) {
+    struct bfd f;
+    char *str;
+    int scratch;
+    int return_code = -1;
+    pid_t new_pid = -1;
+    pid_t child;
+
+    f.fd = open_proc(*target_pid, "status");
+    if (f.fd < 0) {
+        goto err;
+    }
+    if (bfdopenr(&f)) {
+        goto err;
+    }
+
+    while ((str = breadline(&f))) {
+        if (!strncmp(str, "NSpid:", 6)) {
+            char *last;
+
+            last = strrchr(str, '\t');
+            if (!last || sscanf(last, "%d", &new_pid) != 1) {
+                pr_err("Unable to parse NSpid for target pid: %s\n", str);
+                goto err;
+            }
+        } 
+    }
+
+    if (switch_ns(*target_pid, &pid_ns_desc, &scratch)) {
+        pr_err("Failed to enter child pid namespace\n");
+        goto err;
+    }
+
+    child = fork();
+    if (child != 0) {
+        if (waitpid(child, &return_code, 0) != child) {
+            pr_err("Failed to wait on child\n");
+            exit(1);
+        }
+        exit(WEXITSTATUS(return_code));
+    }
+    return new_pid;
+err:
+    return -1;
+}
+
+int cr_enter_ns(pid_t *target_pid) {
+    int scratch;
+    pid_t new_pid = *target_pid;
+    if (opts.enter_pidns) {
+        if (!opts.enter_mntns) {
+            /* We strictly require that procfs is available.  Unless we don't
+             * mind nuking procfs for the parent pid namespace, we must remount
+             * /proc for the child pid namespace in a mount namespace.
+             */
+            pr_err("Must specify --enter-mntns with --enter-pidns\n");
+            exit(1);
+        }
+        new_pid = enter_pidns(target_pid);
+        if (new_pid == -1)
+            return 1;
+    }
+
+    if (opts.enter_mntns) {
+        if (switch_ns(*target_pid, &mnt_ns_desc, &scratch)) {
+            pr_err("Failed to enter child mount namespace\n");
+            goto err;
+        }
+        if (open_proc_sfd("/proc")) {
+            pr_err("Failed to reopen proc service fd in new mount namespace\n");
+            goto err;
+        }
+    }
+    *target_pid = new_pid;
+    return 0;
+err:
+    return -1;
+}
