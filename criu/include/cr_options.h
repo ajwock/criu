@@ -233,7 +233,7 @@ struct cr_options {
 	 */
 	int unprivileged;
 
-    int non_destructive;
+    int keep_link_remaps;
     int enter_mntns;
     int enter_pidns;
 };
